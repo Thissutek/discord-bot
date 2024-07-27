@@ -71,24 +71,26 @@ async function authorize() {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 async function listEvents(auth) {
-	const calendar = google.calendar({ version: 'v3', auth });
+	const calendar = google.calendar({version: 'v3', auth});
 	const res = await calendar.events.list({
-		calendarId: 'primary',
-		timeMin: new Date().toISOString(),
-		maxResults: 10,
-		singleEvents: true,
-		orderBy: 'startTime',
+	  calendarId: 'primary',
+	  timeMin: new Date().toISOString(),
+	  maxResults: 10,
+	  singleEvents: true,
+	  orderBy: 'startTime',
 	});
 	const events = res.data.items;
 	if (!events || events.length === 0) {
-		console.log('No upcoming events found.');
-		return;
+	  return 'No upcoming events found.'
 	}
 	console.log('Upcoming 10 events:');
-	events.map((event, i) => {
-		const start = event.start.dateTime || event.start.date;
-		console.log(`${start} - ${event.summary}`);
-	});
-}
+	const eventsList = events.map((event, i) => {
+	  const start = event.start.dateTime || event.start.date;
+	  return `${start} - ${event.summary}`;
+	}).join('\n');
+	return eventsList;
+  }
+  
+  authorize().then(listEvents).catch(console.error);
 
-authorize().then(listEvents).catch(console.error);
+module.exports = { authorize, listEvents };
