@@ -5,7 +5,7 @@ const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -90,7 +90,19 @@ async function listEvents(auth) {
 	}).join('\n');
 	return eventsList;
   }
-  
-  authorize().then(listEvents).catch(console.error);
 
-module.exports = { authorize, listEvents };
+
+async function createEvent(auth, event) {
+	const calendar = google.calendar({version: 'v3', auth});
+	try {
+		const response = await calendar.events.insert({
+			calendarId: 'primary',
+			resource: event,
+		  })
+		  return response.data
+	} catch (error) {
+		throw new Error('There was an error contacting the Calender service', error)
+	}
+}
+
+module.exports = { authorize, listEvents, createEvent };
