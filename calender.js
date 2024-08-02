@@ -3,6 +3,7 @@ const path = require('path');
 const process = require('process');
 const { authenticate } = require('@google-cloud/local-auth');
 const { google } = require('googleapis');
+const { format } = require('date-fns');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
@@ -86,7 +87,8 @@ async function listEvents(auth) {
 	console.log('Upcoming 10 events:');
 	const eventsList = events.map((event, i) => {
 	  const start = event.start.dateTime || event.start.date;
-	  return `${start} - ${event.summary}`;
+	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm')
+	  return `${formattedDate} - ${event.summary}`;
 	}).join('\n');
 	return eventsList;
   }
@@ -105,4 +107,17 @@ async function createEvent(auth, event) {
 	}
 }
 
-module.exports = { authorize, listEvents, createEvent };
+async function deleteEvent(auth, event) {
+	const calendar = google.calendar({version: 'v3', auth});
+	try {
+		const response = await calendar.events.delete({
+			calenderId: 'primary',
+			resource: event,
+		})
+		console.log('Event was deleted successfully', response.status)
+	} catch (error) {
+		throw new Error('There was an error contacting the Calener Service', error)
+	}
+}
+
+module.exports = { authorize, listEvents, createEvent, deleteEvent };

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { authorize, createEvent } = require('../../calender.js');
+const { parse, formatISO } = require('date-fns');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -12,12 +13,12 @@ module.exports = {
 		))
 		.addStringOption(option => (
 			option.setName('start')
-				.setDescription('Start time of the event in ISO format (e.g., 2024-08-01T09:00:00-07:00)')
+				.setDescription('Start time of the event in ISO format (e.g., yyyy-MM-dd HH:mm)')
 				.setRequired(true)
 		))
 		.addStringOption(option => (
 			option.setName('end')
-				.setDescription('End time of the event in ISO format (e.g., 2024-08-01T10:00:00-07:00)')
+				.setDescription('End time of the event in ISO format (e.g., yyyy-MM-dd HH:mm)')
 				.setRequired(true)
 		))
 		.addStringOption(option => (
@@ -30,6 +31,9 @@ module.exports = {
 		)),
 
 	async execute(interaction) {
+		const startInput = interaction.options.getString('start');
+		const endInput = interaction.options.getString('end');
+
 		if (!interaction.isCommand()) return;
 
 		const { commandName } = interaction;
@@ -38,11 +42,14 @@ module.exports = {
 			try {
 				const auth = await authorize();
 
+				const startDate = parse(startInput, 'yyyy-MM-dd HH:mm', new Date());
+				const endDate = parse(endInput, 'yyyy-MM-dd HH:mm', new Date());
+
 				const summary = interaction.options.getString('summary');
 				const location = interaction.options.getString('location') || '';
 				const description = interaction.options.getString('description') || '';
-				const start = interaction.options.getString('start');
-				const end = interaction.options.getString('end');
+				const start = formatISO(startDate);
+				const end = formatISO(endDate);
 
 				const event = {
 					summary,
