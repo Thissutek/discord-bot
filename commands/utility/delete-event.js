@@ -1,33 +1,28 @@
-// const { SlashCommandBuilder } = require('discord.js');
-// const { authorize, deleteEvent } = require('../../calender.js');
+const { SlashCommandBuilder } = require('discord.js');
+const { authorize, deleteEvent } = require('../../calender.js');
 
-// module.exports = {
-// 	data: new SlashCommandBuilder()
-// 		.setName('delete-event')
-// 		.setDescription('Delete an event')
-// 		.addStringOption(option => (
-// 			option.setName('event-id')
-// 				.setDescription('the events ID')
-// 				.setRequired(true)
-// 		))
-// 	async execute(interaction) {
-// 		if (!interaction.isCommand()) return;
+module.exports = {
+	data: new SlashCommandBuilder()
+		.setName('delete-event')
+		.setDescription('Delete an event')
+		.addStringOption(option => (
+			option.setName('eventid')
+				.setDescription('the simple ID of the event to delete')
+				.setRequired(true)
+		)),
 
-// 		const { commandName } = interaction;
+	async execute(interaction) {
+		if (!interaction.isCommand()) return;
 
-// 		if (commandName === 'delete-event') {
-// 			try {
-// 				const auth = await authorize();
-
-
-
-
-// 				await interaction.reply(``);
-// 			}
-// 			catch (error) {
-// 				console.error(error);
-// 				await interaction.reply('There was an error deleting the event.');
-// 			}
-// 		}
-// 	},
-// };
+        const eventId = interaction.options.getString('eventid');
+			try {
+				const auth = await authorize();
+                const result = await deleteEvent(auth, eventId);
+                await interaction.reply(result)
+			}
+			catch (error) {
+				console.error(error);
+				await interaction.reply('There was an error deleting the event.');
+			}
+	},
+};

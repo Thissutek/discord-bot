@@ -71,6 +71,9 @@ async function authorize() {
  * Lists the next 10 events on the user's primary calendar.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
+const eventIdMap = new Map();
+let nextId = 1;
+
 async function listEvents(auth) {
 	const calendar = google.calendar({version: 'v3', auth});
 	const res = await calendar.events.list({
@@ -80,15 +83,22 @@ async function listEvents(auth) {
 	  singleEvents: true,
 	  orderBy: 'startTime',
 	});
+
+
 	const events = res.data.items;
 	if (!events || events.length === 0) {
 	  return 'No upcoming events found.'
 	}
+
+	eventIdMap.clear();
+
 	console.log('Upcoming 10 events:');
-	const eventsList = events.map((event, i) => {
+	const eventsList = events.map((event) => {
 	  const start = event.start.dateTime || event.start.date;
 	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm')
-	  return `${formattedDate} - ${event.summary}`;
+	  const simpleId = nextId++;
+	  eventIdMap.set(simpleId, event.id);
+	  return `ID: ${simpleId} - ${formattedDate} - ${event.summary}`;
 	}).join('\n');
 	return eventsList;
   }
@@ -107,14 +117,20 @@ async function createEvent(auth, event) {
 	}
 }
 
-async function deleteEvent(auth, event) {
+async function deleteEvent(auth, simpleId) {
 	const calendar = google.calendar({version: 'v3', auth});
+	const eventId = eventIdMap.get(Number(simpleId))
+
+	if(!eventId) {
+		return `No event found with the ID ${simpleId}`
+	}
+
 	try {
-		const response = await calendar.events.delete({
-			calenderId: 'primary',
-			resource: event,
+		await calendar.events.delete({
+			calendarId: 'primary',
+			eventId: eventId,
 		})
-		console.log('Event was deleted successfully', response.status)
+		return `Event with ID ${simpleId} deleted succesfully.`
 	} catch (error) {
 		throw new Error('There was an error contacting the Calener Service', error)
 	}
