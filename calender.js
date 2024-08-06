@@ -71,11 +71,40 @@ async function authorize() {
  * Lists the next 10 events on the user's primary calendar.
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
+
+const DATA_FILE = path.join(__dirname, 'eventData.json')
+
+//Save event data to a JSON file
+async function saveEventData(eventData) {
+	try {
+		await fs.writeFile(DATA_FILE, JSON.stringify(eventData, null, 2));
+	} catch (err) {
+		console.error('Error saving event data', err);
+	}
+}
+
+//Load evebt data from a file
+async function loadEventData() {
+	try {
+		const data = await fs.readFile(DATA_FILE, 'utf-8');
+		return JSON.parse(data);
+	} catch (err) {
+		return {
+			eventIdMap: {},
+			availableIds: [],
+			nextId: 1
+		};
+	}
+}
+
 const eventIdMap = new Map();
+const availableIds = new Set();
 let nextId = 1;
 
 async function listEvents(auth) {
 	const calendar = google.calendar({version: 'v3', auth});
+	const eventData = await loadEventData();
+
 	const res = await calendar.events.list({
 	  calendarId: 'primary',
 	  timeMin: new Date().toISOString(),
@@ -90,15 +119,17 @@ async function listEvents(auth) {
 	  return 'No upcoming events found.'
 	}
 
-	eventIdMap.clear();
-
 	console.log('Upcoming 10 events:');
+
+
 	const eventsList = events.map((event) => {
 	  const start = event.start.dateTime || event.start.date;
 	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm')
-	  const simpleId = nextId++;
-	  eventIdMap.set(simpleId, event.id);
-	  return `ID: ${simpleId} - ${formattedDate} - ${event.summary}`;
+
+	  const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
+
+	  return `ID: ${simpleId || 'Unknown'} - ${formattedDate} - ${event.summary}`;
+	  
 	}).join('\n');
 	return eventsList;
   }
@@ -106,21 +137,38 @@ async function listEvents(auth) {
 
 async function createEvent(auth, event) {
 	const calendar = google.calendar({version: 'v3', auth});
+	const eventData = await loadEventData();
 	try {
 		const response = await calendar.events.insert({
 			calendarId: 'primary',
 			resource: event,
 		  })
-		  return response.data
+		
+		let simpleId;
+		if (eventData.availableIds.length > 0) {
+			simpleId = eventData.availableIds.shift();
+		} else {
+			simpleId = eventData.nextId++;
+		}
+
+		eventData.eventIdMap[simpleId] = response.data.id;
+		await saveEventData(eventData);
+
+		return { 
+			simpleId, 
+			response: response.data,
+			htmlLink: response.data.htmlLink
+		};
 	} catch (error) {
+		console.error('There was an error creating the event:', error)
 		throw new Error('There was an error contacting the Calender service', error)
 	}
 }
 
 async function deleteEvent(auth, simpleId) {
 	const calendar = google.calendar({version: 'v3', auth});
-	const eventId = eventIdMap.get(Number(simpleId))
-
+	const eventData = await loadEventData();
+	const eventId = eventData.eventIdMap[simpleId];
 	if(!eventId) {
 		return `No event found with the ID ${simpleId}`
 	}
@@ -129,9 +177,15 @@ async function deleteEvent(auth, simpleId) {
 		await calendar.events.delete({
 			calendarId: 'primary',
 			eventId: eventId,
-		})
+		});
+
+		delete eventData.eventIdMap[simpleId];
+		eventData.availableIds.push(simpleId);
+		await saveEventData(eventData);
+
 		return `Event with ID ${simpleId} deleted succesfully.`
 	} catch (error) {
+		console.error('There was an error deleting the event:', error)
 		throw new Error('There was an error contacting the Calener Service', error)
 	}
 }

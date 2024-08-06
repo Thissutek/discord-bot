@@ -14,15 +14,15 @@ module.exports = {
 	async execute(interaction) {
 		if (!interaction.isCommand()) return;
 
-        const eventId = interaction.options.getString('eventid');
-			try {
-				const auth = await authorize();
-                const result = await deleteEvent(auth, eventId);
-                await interaction.reply(result)
-			}
-			catch (error) {
-				console.error(error);
-				await interaction.reply('There was an error deleting the event.');
-			}
+		const eventId = interaction.options.getString('eventid');
+		try {
+			const auth = await authorize();
+			const result = await deleteEvent(auth, eventId);
+			await interaction.reply(result);
+		}
+		catch (error) {
+			console.error('Error in execute command', error);
+			await interaction.reply('There was an error deleting the event.');
+		}
 	},
 };
