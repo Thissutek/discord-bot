@@ -11,15 +11,23 @@ module.exports = {
 		.addComponents(
 			new ButtonBuilder()
 				.setCustomId('emoji_1')
-				.setLabel('😀')
+				.setLabel('😊')
 				.setStyle(ButtonStyle.Primary),
 			new ButtonBuilder()
 				.setCustomId('emoji_2')
-				.setLabel('😂')
+				.setLabel('😢')
 				.setStyle(ButtonStyle.Primary),
 			new ButtonBuilder()
 				.setCustomId('emoji_3')
-				.setLabel('😍')
+				.setLabel('😠')
+				.setStyle(ButtonStyle.Primary),
+			new ButtonBuilder()
+				.setCustomId('emoji_4')
+				.setLabel('😴')
+				.setStyle(ButtonStyle.Primary),
+			new ButtonBuilder()
+				.setCustomId('emoji_5')
+				.setLabel('😒')
 				.setStyle(ButtonStyle.Primary)
 			)	
 			await interaction.reply({content: `Greetings ${interaction.user}, how are you doing today?`, components: [row]});
