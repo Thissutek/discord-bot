@@ -25,6 +25,7 @@ async function loadSavedCredentialsIfExist() {
 		return google.auth.fromJSON(credentials);
 	}
 	catch (err) {
+		console.log('Failed to load saved state', err);
 		return null;
 	}
 }
@@ -72,37 +73,37 @@ async function authorize() {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
-const DATA_FILE = path.join(__dirname, 'eventData.json')
+const DATA_FILE = path.join(__dirname, 'eventData.json');
 
-//Save event data to a JSON file
+// Save event data to a JSON file
 async function saveEventData(eventData) {
 	try {
 		await fs.writeFile(DATA_FILE, JSON.stringify(eventData, null, 2));
-	} catch (err) {
+	}
+	catch (err) {
 		console.error('Error saving event data', err);
 	}
 }
 
-//Load evebt data from a file
+// Load evebt data from a file
 async function loadEventData() {
 	try {
 		const data = await fs.readFile(DATA_FILE, 'utf-8');
 		return JSON.parse(data);
-	} catch (err) {
+	}
+	catch (err) {
+		console.log('Failed to load event data', err);
 		return {
 			eventIdMap: {},
 			availableIds: [],
-			nextId: 1
+			nextId: 1,
 		};
 	}
 }
 
-const eventIdMap = new Map();
-const availableIds = new Set();
-let nextId = 1;
 
 async function listEvents(auth) {
-	const calendar = google.calendar({version: 'v3', auth});
+	const calendar = google.calendar({ version: 'v3', auth });
 	const eventData = await loadEventData();
 
 	const res = await calendar.events.list({
@@ -116,7 +117,7 @@ async function listEvents(auth) {
 
 	const events = res.data.items;
 	if (!events || events.length === 0) {
-	  return 'No upcoming events found.'
+	  return 'No upcoming events found.';
 	}
 
 	console.log('Upcoming 10 events:');
@@ -124,53 +125,55 @@ async function listEvents(auth) {
 
 	const eventsList = events.map((event) => {
 	  const start = event.start.dateTime || event.start.date;
-	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm')
+	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm');
 
 	  const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
 
 	  return `ID: ${simpleId || 'Unknown'} - ${formattedDate} - ${event.summary}`;
-	  
+
 	}).join('\n');
 	return eventsList;
-  }
+}
 
 
 async function createEvent(auth, event) {
-	const calendar = google.calendar({version: 'v3', auth});
+	const calendar = google.calendar({ version: 'v3', auth });
 	const eventData = await loadEventData();
 	try {
 		const response = await calendar.events.insert({
 			calendarId: 'primary',
 			resource: event,
-		  })
-		
+		  });
+
 		let simpleId;
 		if (eventData.availableIds.length > 0) {
 			simpleId = eventData.availableIds.shift();
-		} else {
+		}
+		else {
 			simpleId = eventData.nextId++;
 		}
 
 		eventData.eventIdMap[simpleId] = response.data.id;
 		await saveEventData(eventData);
 
-		return { 
-			simpleId, 
+		return {
+			simpleId,
 			response: response.data,
-			htmlLink: response.data.htmlLink
+			htmlLink: response.data.htmlLink,
 		};
-	} catch (error) {
-		console.error('There was an error creating the event:', error)
-		throw new Error('There was an error contacting the Calender service', error)
+	}
+	catch (error) {
+		console.error('There was an error creating the event:', error);
+		throw new Error('There was an error contacting the Calender service', error);
 	}
 }
 
 async function deleteEvent(auth, simpleId) {
-	const calendar = google.calendar({version: 'v3', auth});
+	const calendar = google.calendar({ version: 'v3', auth });
 	const eventData = await loadEventData();
 	const eventId = eventData.eventIdMap[simpleId];
-	if(!eventId) {
-		return `No event found with the ID ${simpleId}`
+	if (!eventId) {
+		return `No event found with the ID ${simpleId}`;
 	}
 
 	try {
@@ -183,10 +186,11 @@ async function deleteEvent(auth, simpleId) {
 		eventData.availableIds.push(simpleId);
 		await saveEventData(eventData);
 
-		return `Event with ID ${simpleId} deleted succesfully.`
-	} catch (error) {
-		console.error('There was an error deleting the event:', error)
-		throw new Error('There was an error contacting the Calener Service', error)
+		return `Event with ID ${simpleId} deleted succesfully.`;
+	}
+	catch (error) {
+		console.error('There was an error deleting the event:', error);
+		throw new Error('There was an error contacting the Calener Service', error);
 	}
 }
 

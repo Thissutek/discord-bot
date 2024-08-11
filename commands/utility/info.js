@@ -1,5 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { execute } = require('./reload');
+const { SlashCommandBuilder, User } = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -15,6 +14,6 @@ module.exports = {
 				.setName('server')
 				.setDescription('Info about the server')),
 	async execute(interaction) {
-		await interaction.reply('');
+		await interaction.reply(``);
 	},
 };
