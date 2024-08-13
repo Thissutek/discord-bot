@@ -14,6 +14,6 @@ module.exports = {
 				.setName('server')
 				.setDescription('Info about the server')),
 	async execute(interaction) {
-		await interaction.reply(``);
+		await interaction.reply('');
 	},
 };
