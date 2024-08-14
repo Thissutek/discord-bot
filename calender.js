@@ -106,6 +106,8 @@ async function listEvents(auth) {
 	const calendar = google.calendar({ version: 'v3', auth });
 	const eventData = await loadEventData();
 
+	await syncEvents(auth)
+
 	const res = await calendar.events.list({
 	  calendarId: 'primary',
 	  timeMin: new Date().toISOString(),
@@ -194,4 +196,49 @@ async function deleteEvent(auth, simpleId) {
 	}
 }
 
-module.exports = { authorize, listEvents, createEvent, deleteEvent };
+async function syncEvents(auth) {
+	const calendar = google.calendar({ version: 'v3', auth });
+	const eventData = await loadEventData();
+
+	const res = await calendar.events.list({
+		calendarId: 'primary',
+		timeMin: new Date().toISOString(),
+		maxResults: 10,
+		singleEvents: true,
+		orderBy: 'startTime',
+	  });
+
+	const eventsToSave = { ... eventData };
+
+	res.data.items.forEach(event => {
+		const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
+
+		if(!simpleId) {
+			const newId = generateNewId(eventData)
+			eventData.eventIdMap[newId] = event.id;
+		}
+	});
+
+	await saveEventData(eventData);
+}
+
+function generateNewId(eventData) {
+	let newId = eventData.nextId++;
+	while(eventData.eventIdMap[newId]){
+		newId++;
+	}
+	return newId;
+}
+
+async function initializeCalender(auth) {
+	try {
+		console.log('Initializing Google Calender Integration...')
+		await syncEvents(auth)
+
+		console.log('Google Calender initialized successfully.')
+	} catch (error) {
+		console.error('Failed to initialize successfully', error)
+		throw error;
+	}
+}
+module.exports = { authorize, listEvents, createEvent, deleteEvent, initializeCalender };

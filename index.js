@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
+const { authorize, initializeCalender } = require('./calender.js');
+const { start } = require('node:repl');
 
 const client = new Client({
 	intents: [
@@ -16,6 +18,8 @@ const client = new Client({
 
 client.cooldowns = new Collection();
 client.commands = new Collection();
+
+//Loads Commands
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
@@ -49,5 +53,17 @@ for (const file of eventFiles) {
 	}
 }
 
+async function startBot() {
+	try {
+		const auth = await authorize();
+		await initializeCalender(auth);
 
-client.login(token);
+		client.login(token);
+		console.log('Alfred is ready to serve...')
+	} catch (error) {
+		console.error('Failed to start bot.', error)
+		process.exit(1)
+	}
+}
+
+startBot();
