@@ -2,8 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
-const { authorize, initializeCalender } = require('./calender.js');
-const { start } = require('node:repl');
+const { authorize, initializeCalender, syncEvents } = require('./calender.js');
 
 const client = new Client({
 	intents: [
@@ -19,7 +18,7 @@ const client = new Client({
 client.cooldowns = new Collection();
 client.commands = new Collection();
 
-//Loads Commands
+// Loads Commands
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
@@ -58,11 +57,24 @@ async function startBot() {
 		const auth = await authorize();
 		await initializeCalender(auth);
 
+		// Periodically Syncs event data every 10 mins
+		setInterval(async () => {
+			try {
+				console.log('Syncing event data with Google Calender...');
+				await syncEvents(auth);
+				console.log('Event data synced successfully.');
+			}
+			catch (error) {
+				console.error('Error during event data sync:', error);
+			}
+		}, 600000);
+
 		client.login(token);
-		console.log('Alfred is ready to serve...')
-	} catch (error) {
-		console.error('Failed to start bot.', error)
-		process.exit(1)
+		console.log('Alfred is ready to serve...');
+	}
+	catch (error) {
+		console.error('Failed to start bot.', error);
+		process.exit(1);
 	}
 }
 

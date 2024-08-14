@@ -18,7 +18,7 @@ module.exports = {
 
 				const eventsMessage = events || 'No upcoming events found';
 
-				await interaction.reply(`Here are the events coming up for you: \n ${eventsMessage}`);
+				await interaction.reply(`Here are the events coming up for you:\n ${eventsMessage}`);
 			}
 			catch (error) {
 				console.error(error);

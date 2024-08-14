@@ -106,7 +106,7 @@ async function listEvents(auth) {
 	const calendar = google.calendar({ version: 'v3', auth });
 	const eventData = await loadEventData();
 
-	await syncEvents(auth)
+	await syncEvents(auth);
 
 	const res = await calendar.events.list({
 	  calendarId: 'primary',
@@ -126,11 +126,22 @@ async function listEvents(auth) {
 
 
 	const eventsList = events.map((event) => {
-	  const start = event.start.dateTime || event.start.date;
-	  const formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm');
+	  let start;
+	  let formattedDate;
+
+	  if (event.start.date) {
+			start = event.start.date;
+			formattedDate = format(new Date(start), 'yyyy-MM-dd') + ' All Day';
+	  }
+		else if (event.start.dateTime) {
+			start = event.start.dateTime;
+			formattedDate = format(new Date(start), 'yyyy-MM-dd HH:mm');
+	  }
+		else {
+			formattedDate = 'Unknown';
+	  }
 
 	  const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
-
 	  return `ID: ${simpleId || 'Unknown'} - ${formattedDate} - ${event.summary}`;
 
 	}).join('\n');
@@ -208,23 +219,37 @@ async function syncEvents(auth) {
 		orderBy: 'startTime',
 	  });
 
-	const eventsToSave = { ... eventData };
+	const events = res.data.items;
+	if (!events || events.length === 0) {
+		console.log('No evntrs found to sync');
+		return;
+	}
+
+	let eventsUpdated = false;
 
 	res.data.items.forEach(event => {
 		const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
 
-		if(!simpleId) {
-			const newId = generateNewId(eventData)
+		if (!simpleId) {
+			const newId = generateNewId(eventData);
 			eventData.eventIdMap[newId] = event.id;
+			eventsUpdated = true;
+			console.log(`Assigned new ID ${newId} to event: ${event.summary}`);
 		}
 	});
 
-	await saveEventData(eventData);
+	if (eventsUpdated) {
+		await saveEventData(eventData);
+		console.log('Event data has been update and saved.');
+	}
+	else {
+		console.log('No new events needed to be updated');
+	}
 }
 
 function generateNewId(eventData) {
 	let newId = eventData.nextId++;
-	while(eventData.eventIdMap[newId]){
+	while (eventData.eventIdMap[newId]) {
 		newId++;
 	}
 	return newId;
@@ -232,13 +257,14 @@ function generateNewId(eventData) {
 
 async function initializeCalender(auth) {
 	try {
-		console.log('Initializing Google Calender Integration...')
-		await syncEvents(auth)
+		console.log('Initializing Google Calender Integration...');
+		await syncEvents(auth);
 
-		console.log('Google Calender initialized successfully.')
-	} catch (error) {
-		console.error('Failed to initialize successfully', error)
+		console.log('Google Calender initialized successfully.');
+	}
+	catch (error) {
+		console.error('Failed to initialize successfully', error);
 		throw error;
 	}
 }
-module.exports = { authorize, listEvents, createEvent, deleteEvent, initializeCalender };
+module.exports = { authorize, listEvents, createEvent, deleteEvent, initializeCalender, syncEvents };

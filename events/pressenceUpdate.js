@@ -28,7 +28,7 @@ module.exports = {
 
 		if (newPresence.status === 'offline' && oldPresence && oldPresence.status === 'online') {
 			clearHydrationReminders(newPresence.user);
-			clearExerciseReminders(newPresence.user)
+			clearExerciseReminders(newPresence.user);
 		}
 	},
 };
@@ -38,18 +38,19 @@ function scheduleExerciseReminders(user) {
 	  dailyExerciseReminders.get(user.id).forEach(task => task.stop());
 	  dailyExerciseReminders.delete(user.id);
 	}
-  
+
 	const times = ['0 9 * * *', '0 13 * * *', '0 18 * * *'];
-	const tasks = times.map(time => 
+	const tasks = times.map(time =>
 	  cron.schedule(time, async () => {
-		try {
+			try {
 		  await user.send('Time for some exercise, Master! Remember to take a break and stretch your muscles.');
-		} catch (error) {
+			}
+			catch (error) {
 		  console.error('Error sending exercise reminder:', error);
-		}
-	  })
-	)
-dailyExerciseReminders.set(user.id, tasks)
+			}
+	  }),
+	);
+	dailyExerciseReminders.set(user.id, tasks);
 }
 
 function scheduleHydrationReminders(user) {
@@ -57,30 +58,31 @@ function scheduleHydrationReminders(user) {
 	  hydrationReminders.get(user.id).stop();
 	  hydrationReminders.delete(user.id);
 	}
-  
+
 	const task = cron.schedule('*/45 8-23 * * * ', async () => {
 	  try {
-		await user.send('Master, a quick reminder: staying hydrated is crucial. Do take a moment to drink some water—it is good for you.');
-	  } catch (error) {
-		console.error('Error sending hydration reminder:', error);
-		task.stop();
-		hydrationReminders.delete(user.id);
+			await user.send('Master, a quick reminder: staying hydrated is crucial. Do take a moment to drink some water—it is good for you.');
+	  }
+		catch (error) {
+			console.error('Error sending hydration reminder:', error);
+			task.stop();
+			hydrationReminders.delete(user.id);
 	  }
 	});
-  
+
 	hydrationReminders.set(user.id, task);
-  }
-  
-  function clearExerciseReminders(user) {
+}
+
+function clearExerciseReminders(user) {
 	if (dailyExerciseReminders.has(user.id)) {
 	  dailyExerciseReminders.get(user.id).forEach(task => task.stop());
 	  dailyExerciseReminders.delete(user.id);
 	}
-  }
-  
-  function clearHydrationReminders(user) {
+}
+
+function clearHydrationReminders(user) {
 	if (hydrationReminders.has(user.id)) {
 	  hydrationReminders.get(user.id).stop();
 	  hydrationReminders.delete(user.id);
 	}
-  }
+}
