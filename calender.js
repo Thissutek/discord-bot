@@ -73,7 +73,7 @@ async function authorize() {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
-const DATA_FILE = path.join(__dirname, 'eventData.json');
+const DATA_FILE = path.join(__dirname, 'databases', 'eventData.json');
 
 // Save event data to a JSON file
 async function saveEventData(eventData) {
@@ -221,13 +221,18 @@ async function syncEvents(auth) {
 
 	const events = res.data.items;
 	if (!events || events.length === 0) {
-		console.log('No evntrs found to sync');
+		console.log('No events found to sync');
 		return;
 	}
 
 	let eventsUpdated = false;
 
+	const activeEventIds = new Set();
+
 	res.data.items.forEach(event => {
+		const eventId = event.id;
+		activeEventIds.add(eventId)
+
 		const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
 
 		if (!simpleId) {
@@ -237,6 +242,16 @@ async function syncEvents(auth) {
 			console.log(`Assigned new ID ${newId} to event: ${event.summary}`);
 		}
 	});
+
+	for(const [simpleId, eventId] of Object.entries(eventData.eventIdMap)) {
+		if(!activeEventIds.has(eventId)) {
+			console.log(`Removing outdated event ID ${simpleId} (Google Calender ID: ${eventId})`);
+			delete eventData.eventIdMap[simpleId];
+			eventData.availableIds.push[simpleId];
+			eventsUpdated = true;
+		}
+	}
+
 
 	if (eventsUpdated) {
 		await saveEventData(eventData);
