@@ -1,1 +1,11 @@
-[]
+{
+  "items": [
+    {
+      "name": "fish",
+      "category": "meat",
+      "purchaseDate": "2024-08-21T03:48:32.220Z",
+      "expiryDuration": "3",
+      "exactExpiryDate": null
+    }
+  ]
+}

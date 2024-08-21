@@ -4,6 +4,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
 const { authorize, initializeCalender, syncEvents } = require('./calender.js');
 
+
 const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
