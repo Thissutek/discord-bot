@@ -4,6 +4,7 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
 const { authorize, initializeCalender, syncEvents } = require('./calender.js');
 
+
 const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
@@ -59,7 +60,7 @@ async function startBot() {
 
 		console.log('Syncing event data with Google Calender...');
 		await syncEvents(auth);
-		console.log('Event data sync successful')
+		console.log('Event data sync successful');
 
 		// Periodically Syncs event data every 10 mins
 		setInterval(async () => {
