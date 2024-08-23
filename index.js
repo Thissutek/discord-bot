@@ -60,7 +60,7 @@ async function startBot() {
 
 		console.log('Syncing event data with Google Calender...');
 		await syncEvents(auth);
-		console.log('Event data sync successful')
+		console.log('Event data sync successful');
 
 		// Periodically Syncs event data every 10 mins
 		setInterval(async () => {

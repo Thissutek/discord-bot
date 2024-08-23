@@ -231,7 +231,7 @@ async function syncEvents(auth) {
 
 	res.data.items.forEach(event => {
 		const eventId = event.id;
-		activeEventIds.add(eventId)
+		activeEventIds.add(eventId);
 
 		const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
 
@@ -243,8 +243,8 @@ async function syncEvents(auth) {
 		}
 	});
 
-	for(const [simpleId, eventId] of Object.entries(eventData.eventIdMap)) {
-		if(!activeEventIds.has(eventId)) {
+	for (const [simpleId, eventId] of Object.entries(eventData.eventIdMap)) {
+		if (!activeEventIds.has(eventId)) {
 			console.log(`Removing outdated event ID ${simpleId} (Google Calender ID: ${eventId})`);
 			delete eventData.eventIdMap[simpleId];
 			eventData.availableIds.push[simpleId];
