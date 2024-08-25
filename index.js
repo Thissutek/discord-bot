@@ -62,6 +62,7 @@ for (const file of eventFiles) {
 
 async function startBot() {
 	try {
+		await client.login(token);
 		const auth = await authorize();
 		await initializeCalender(auth);
 
@@ -83,7 +84,7 @@ async function startBot() {
 			}
 		}, 600000);
 
-		client.login(token);
+
 		console.log('Alfred is ready to serve...');
 	}
 	catch (error) {
