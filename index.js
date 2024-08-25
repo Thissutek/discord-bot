@@ -3,6 +3,7 @@ const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
 const { authorize, initializeCalender, syncEvents } = require('./calender.js');
+const { startExpiryCheck } = require('./events/checkExpiry.js')
 
 
 const client = new Client({
@@ -12,8 +13,14 @@ const client = new Client({
 		GatewayIntentBits.DirectMessages,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMessageTyping,
 	],
-	partials: ['CHANNEL'],
+	partials: [
+		'CHANNEL',
+		'MESSAGE',
+		'GUILD_MEMBER',
+		'USER'
+	],
 });
 
 client.cooldowns = new Collection();
@@ -55,12 +62,15 @@ for (const file of eventFiles) {
 
 async function startBot() {
 	try {
+		await client.login(token);
 		const auth = await authorize();
 		await initializeCalender(auth);
 
 		console.log('Syncing event data with Google Calender...');
 		await syncEvents(auth);
 		console.log('Event data sync successful');
+
+		startExpiryCheck(client);
 
 		// Periodically Syncs event data every 10 mins
 		setInterval(async () => {
@@ -74,7 +84,7 @@ async function startBot() {
 			}
 		}, 600000);
 
-		client.login(token);
+
 		console.log('Alfred is ready to serve...');
 	}
 	catch (error) {
