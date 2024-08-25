@@ -1,17 +1,10 @@
 {
   "items": [
     {
-      "name": "steak",
-      "category": "meat",
-      "purchaseDate": "2024-08-23T02:07:28.730Z",
-      "expiryDuration": "3 days",
-      "exactExpiryDate": null
-    },
-    {
       "name": "fish",
       "category": "meat",
-      "purchaseDate": "2024-08-23T02:07:51.739Z",
-      "expiryDuration": "2",
+      "purchaseDate": "2024-08-25T00:31:56.811Z",
+      "expiryDuration": "1",
       "exactExpiryDate": null
     }
   ]

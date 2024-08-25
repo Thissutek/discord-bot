@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { listItems } = require('../../refrigeratorReminder');
 
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('list-items')
@@ -12,9 +13,12 @@ module.exports = {
 		}
 		else {
 			const itemList = items.map(item => {
+
+				const expiryDuration = Number(item.expiryDuration)
+
 				const expiryDate = item.exactExpiryDate
 					? new Date(item.exactExpiryDate).toLocaleDateString()
-					: new Date(new Date(item.purchaseDate).setDate(new Date(item.purchaseDate).getDate() + item.expiryDuration)).toLocaleDateString();
+					: new Date(new Date(item.purchaseDate).setDate(new Date(item.purchaseDate).getDate() + expiryDuration)).toLocaleDateString();
 
 				return `${item.name} (${item.category}) - Expires: ${expiryDate}`;
 			}).join('\n');
