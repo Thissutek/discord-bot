@@ -119,7 +119,7 @@ async function listEvents(auth) {
 
 	const events = res.data.items;
 	if (!events || events.length === 0) {
-	  return 'No upcoming events found.';
+	  return [];
 	}
 
 	console.log('Upcoming 10 events:');
@@ -142,9 +142,14 @@ async function listEvents(auth) {
 	  }
 
 	  const simpleId = Object.entries(eventData.eventIdMap).find(([key, value]) => value === event.id)?.[0];
-	  return `ID: ${simpleId || 'Unknown'} - ${formattedDate} - ${event.summary}`;
+	  return {
+		id: simpleId || 'Unknown',
+		summary: event.summary,
+		start,
+		formattedDate
+	  };
 
-	}).join('\n');
+	});
 	return eventsList;
 }
 

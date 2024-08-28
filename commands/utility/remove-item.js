@@ -14,7 +14,7 @@ module.exports = {
 		const updatedItems = await removeItem(name);
 
 		if (updatedItems === null) {
-			await interaction.reply(`No item nameed "${fish}" was found in the refrigerator.`);
+			await interaction.reply(`No item named "${name}" was found in the refrigerator.`);
 		}
 		else {
 			await interaction.reply(`${name} has been removed from the refrigerator`);

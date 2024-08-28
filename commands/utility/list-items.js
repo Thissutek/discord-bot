@@ -14,7 +14,7 @@ module.exports = {
 		else {
 			const itemList = items.map(item => {
 
-				const expiryDuration = Number(item.expiryDuration)
+				const expiryDuration = Number(item.expiryDuration);
 
 				const expiryDate = item.exactExpiryDate
 					? new Date(item.exactExpiryDate).toLocaleDateString()

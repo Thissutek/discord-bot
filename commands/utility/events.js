@@ -16,9 +16,11 @@ module.exports = {
 				const auth = await authorize();
 				const events = await listEvents(auth);
 
-				const eventsMessage = events || 'No upcoming events found';
+				const eventsMessage = events.map(event => {
+					return `ID: ${event.id} - ${event.summary} - ${event.formattedDate}`
+				}).join('\n')
 
-				await interaction.reply(`Here are the events coming up for you:\n ${eventsMessage}`);
+				await interaction.reply(`Here are the events coming up for you:\n${eventsMessage}`);
 			}
 			catch (error) {
 				console.error(error);

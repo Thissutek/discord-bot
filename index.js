@@ -3,7 +3,8 @@ const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { token } = require('./config.json');
 const { authorize, initializeCalender, syncEvents } = require('./calender.js');
-const { startExpiryCheck } = require('./events/checkExpiry.js')
+const { startExpiryCheck } = require('./events/checkExpiry.js');
+const { startEventNotificationCheck } = require('./events/checkUpcomingEvents.js')
 
 
 const client = new Client({
@@ -19,7 +20,7 @@ const client = new Client({
 		'CHANNEL',
 		'MESSAGE',
 		'GUILD_MEMBER',
-		'USER'
+		'USER',
 	],
 });
 
@@ -71,7 +72,7 @@ async function startBot() {
 		console.log('Event data sync successful');
 
 		startExpiryCheck(client);
-
+		startEventNotificationCheck(client);
 		// Periodically Syncs event data every 10 mins
 		setInterval(async () => {
 			try {
