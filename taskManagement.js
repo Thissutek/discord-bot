@@ -29,14 +29,18 @@ async function loadTaskData(){
 
 async function saveTaskData(data){
     try {
-
+        await fs.writeFile(TASK_DATA_FILE, JSON.stringify(data, null, 2))
     } catch (error) {
-        console.error('Error saving refrigerator data', error)
+        console.error('Error saving task data', error)
     }
 }
 
 async function addTask(name, priority, description, dueDate = null) {
-
+    const data = await loadTaskData();
+    const task = createTask(name, priority, description, dueDate);
+    data.tasks.push(task);
+    await saveTaskData(data)
+    return task;
 }
 
 async function listTask() {
@@ -45,6 +49,18 @@ async function listTask() {
 }
 
 async function removeTask(name) {
+    const data = await loadTaskData();
+
+    const initialLength = data.tasks.length;
+    const updatedTasks = data.tasks.filter(task => task.name.toLowerCase() !== name.toLowerCase());
+
+    if(updatedTasks.length === initialLength){
+        return null;
+    }
+
+    data.tasks = updatedTasks;
+    await saveTaskData(data);
+    return updatedTasks;
 
 }
 
